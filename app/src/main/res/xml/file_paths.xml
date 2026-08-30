@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="generated_modules" path="modules/" />
+    <files-path name="module_exports" path="module-exports/" />
+    <files-path name="diagnostics" path="diagnostics/" />
+</paths>

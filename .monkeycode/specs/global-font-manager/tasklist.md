@@ -1,0 +1,31 @@
+# 第三阶段实现任务清单
+
+- [x] 增加 FontBackupEntity、DAO、Room 迁移
+- [x] 实现 RootShellManager 与 Magisk、KernelSU、APatch 检测
+- [x] 实现系统字体目标探测和 Root 命令封装
+- [x] 实现 BackupManager 多版本备份、恢复和删除
+- [x] 实现 FontModuleGenerator、恢复模块和 overlay 路径映射
+- [x] 实现 FontReplacementEngine 的校验、空间检查、备份、安装和回滚
+- [x] 接入 Root 管理页面与 MVVM 状态
+- [x] 更新第三阶段需求和架构文档
+- [x] 增加 FontModuleEntity、RootOperationLogEntity 与 Room 迁移
+- [x] 实现 FontModuleExporter ZIP 打包、权限保留和完整性校验
+- [x] 实现 ModuleInstaller 的管理器跳转、分享和文件打开
+- [x] 接入模块记录、Root 日志页面和模块管理操作
+- [x] 增加 Emergency Restore 与 overlay 安全恢复流程
+- [x] 更新第四阶段需求、设计和接口文档
+- [x] 实现 SystemFontAnalyzer 与 MIUI/HyperOS 系统配置读取
+- [x] 增强动态字体目标和 overlay 路径映射
+- [x] 实现 FontCompatibilityChecker 字符覆盖检测
+- [x] 增加系统字体模拟预览和 DeviceCompatibilityReport
+- [x] 更新第五阶段需求与架构文档
+- [x] 增加 Gradle 8.7 Wrapper、KSP 和 Room Schema 配置
+- [x] 增加 RootEnvironmentChecker 与 SELinux 风险检测
+- [x] 增强 Magisk、KernelSU、APatch 模块元数据和脚本权限
+- [x] 增加 GlobalExceptionHandler 与 crash.log
+- [x] 增加诊断报告导出和高级设置持久化
+- [x] 增加 release 版本配置、README、LICENSE 和 CHANGELOG
+- [ ] 在具备 JDK 17 和 Android SDK 的环境执行 assembleDebug、assembleRelease
+- [x] 增加发布前检查页面并审计模块脚本与字体恢复流程
+- [x] 执行 clean、assembleDebug、lint、test 和 assembleRelease 命令并记录环境结果
+- [x] 完成 Gradle、依赖、Manifest、Room KSP 和 APK 输出目录静态核验
