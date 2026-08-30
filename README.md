@@ -37,4 +37,4 @@ Global Font Manager 是一个面向 Xiaomi、Redmi、POCO 设备的 Android Root
 ./gradlew assembleRelease
 ```
 
-Release 构建当前使用未签名配置，需要在发布渠道配置正式签名。
+Release 构建当前使用 Debug keystore 作为测试签名，正式发布需要配置正式签名。
