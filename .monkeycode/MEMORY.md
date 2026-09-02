@@ -13,6 +13,15 @@ This file records user instructions, preferences, and teachings for reference in
   - The current workspace has no Java runtime or Android SDK, so Gradle builds stop before dependency resolution.
 
 [Project Knowledge Summary]
+- Date: 2026-09-02
+- Context: Discovered by Agent while assembling the Debug APK
+- Category: Build Methods
+- Instructions:
+  - Debug APK generation in this environment uses JDK 17 at `/usr/lib/jvm/java-17-openjdk-amd64` and Android SDK at `/opt/android-sdk`.
+  - Required SDK packages are Platform 35 and Build Tools 35.0.1.
+  - Debug APK output path is `app/build/outputs/apk/debug/app-debug.apk`.
+
+[Project Knowledge Summary]
 - Date: 2026-08-30
 - Context: Discovered by Agent while performing final Android static verification
 - Category: Environment Configuration

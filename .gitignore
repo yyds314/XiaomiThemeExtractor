@@ -79,6 +79,7 @@
 *.war
 *.ear
 **/.gradle/
+local.properties
 
 # C/C++/Go/Rust
 *.o

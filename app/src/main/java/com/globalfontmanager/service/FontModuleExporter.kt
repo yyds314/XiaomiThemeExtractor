@@ -53,7 +53,7 @@ class FontModuleExporter(private val outputDirectory: File) {
     private fun validate(zip: File, moduleId: String, moduleName: String, version: String) {
         require(zip.isFile && zip.length() > 0) { "ZIP 文件生成失败" }
         ZipFile(zip).use { archive ->
-            val names = archive.entries().asSequence().map { it.name }.toSet()
+            val names = archive.entries.asSequence().map { entry -> entry.name }.toSet()
             REQUIRED_FILES.forEach { relative ->
                 require(names.contains("$moduleId/$relative")) { "ZIP 缺少 $relative" }
             }
