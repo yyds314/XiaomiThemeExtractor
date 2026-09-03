@@ -3,7 +3,13 @@ package com.globalfontmanager.service
 class RootEnvironmentChecker(private val shell: RootShellManager) {
     suspend fun check(): RootEnvironment {
         val base = shell.detectEnvironment()
-        if (!base.isGranted) return base.copy(warnings = listOf("Root 权限不可用，无法执行系统字体操作"))
+        if (!base.isGranted) {
+            val warning = when (base.status) {
+                RootStatus.DENIED -> "Root 请求已被拒绝。请在 Magisk / KernelSU / APatch 中允许 Global Font Manager，然后点刷新"
+                else -> "未检测到可用 su。请确认已安装 KernelSU、Magisk 或 APatch，首次打开时允许 Root 授权"
+            }
+            return base.copy(warnings = listOf(warning))
+        }
         val modulePath = RootShellManager.quote(RootShellManager.MODULE_PATH)
         val moduleReadable = shell.runSu("test -d $modulePath && test -r $modulePath").isSuccess
         val moduleWritable = shell.runSu("test -d $modulePath && test -w $modulePath && test -x $modulePath").isSuccess

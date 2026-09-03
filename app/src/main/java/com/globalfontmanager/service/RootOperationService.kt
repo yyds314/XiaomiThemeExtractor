@@ -60,17 +60,27 @@ interface RootOperationService {
 }
 
 class RootShellManager(private val logger: RootOperationLogger? = null) : RootOperationService {
+    @Volatile
+    private var cachedSuPath: String? = null
+    @Volatile
+    private var suResolved = false
+
     override suspend fun detectEnvironment(): RootEnvironment = withContext(Dispatchers.IO) {
-        val suPath = SU_PATHS.firstOrNull { java.io.File(it).exists() }
-        if (suPath == null) return@withContext RootEnvironment(RootStatus.UNAVAILABLE, RootProvider.UNKNOWN, null, null)
+        val suPath = resolveSuPath()
         val result = runSu("id")
-        if (!result.isSuccess) {
-            return@withContext RootEnvironment(RootStatus.DENIED, RootProvider.UNKNOWN, null, suPath)
+        val granted = result.isSuccess && result.stdout.contains("uid=0")
+        if (!granted) {
+            val status = if (suPath == null && result.exitCode == -1 && result.stderr.contains("无法启动 su")) {
+                RootStatus.UNAVAILABLE
+            } else {
+                RootStatus.DENIED
+            }
+            return@withContext RootEnvironment(status, RootProvider.UNKNOWN, null, suPath)
         }
         val provider = when {
-            runSu("test -d /data/adb/magisk").isSuccess -> RootProvider.MAGISK
-            runSu("test -d /data/adb/ksu").isSuccess -> RootProvider.KERNEL_SU
-            runSu("test -d /data/adb/ap").isSuccess -> RootProvider.APATCH
+            runSu("test -d /data/adb/magisk -o -f /data/adb/magisk.db").isSuccess -> RootProvider.MAGISK
+            runSu("test -d /data/adb/ksu -o -f /data/adb/ksud").isSuccess -> RootProvider.KERNEL_SU
+            runSu("test -d /data/adb/ap -o -d /data/adb/ap/bin").isSuccess -> RootProvider.APATCH
             else -> RootProvider.UNKNOWN
         }
         val modulePath = when (provider) {
@@ -125,7 +135,7 @@ class RootShellManager(private val logger: RootOperationLogger? = null) : RootOp
 
     suspend fun runSu(command: String, timeoutMillis: Long = 30_000): ShellResult {
         val result = try {
-            val process = ProcessBuilder("su", "-c", command).redirectErrorStream(false).start()
+            val process = ProcessBuilder(*suCommand(command)).redirectErrorStream(false).start()
             val finished = process.waitFor(timeoutMillis, java.util.concurrent.TimeUnit.MILLISECONDS)
             val stdout = process.inputStream.bufferedReader().use { it.readText() }
             val stderr = process.errorStream.bufferedReader().use { it.readText() }
@@ -140,6 +150,36 @@ class RootShellManager(private val logger: RootOperationLogger? = null) : RootOp
         }
         logger?.record(command, result)
         return result
+    }
+
+    private fun resolveSuPath(): String? {
+        if (suResolved) return cachedSuPath
+        cachedSuPath = SU_PATHS.firstOrNull { path ->
+            val file = java.io.File(path)
+            file.isFile && (file.canExecute() || file.exists())
+        } ?: runCatching {
+            val process = ProcessBuilder("sh", "-c", "command -v su || which su").redirectErrorStream(true).start()
+            val finished = process.waitFor(5_000, java.util.concurrent.TimeUnit.MILLISECONDS)
+            if (!finished) {
+                process.destroyForcibly()
+                return@runCatching null
+            }
+            process.inputStream.bufferedReader().use { it.readText() }
+                .lineSequence()
+                .map(String::trim)
+                .firstOrNull { it.isNotBlank() && !it.contains("not found", ignoreCase = true) }
+        }.getOrNull()
+        suResolved = true
+        return cachedSuPath
+    }
+
+    private fun suCommand(command: String): Array<String> {
+        val suPath = resolveSuPath()
+        return if (suPath.isNullOrBlank()) {
+            arrayOf("su", "-c", command)
+        } else {
+            arrayOf(suPath, "-c", command)
+        }
     }
 
     suspend fun readFile(path: String): String = runSu("cat ${quote(path)}").stdout
@@ -158,7 +198,19 @@ class RootShellManager(private val logger: RootOperationLogger? = null) : RootOp
         const val MODULE_PATH = "/data/adb/modules/$MODULE_ID"
         val FONT_ROOTS = listOf("/system/fonts", "/product/fonts", "/system_ext/fonts", "/vendor/fonts")
         private val SUPPORTED_EXTENSIONS = setOf("ttf", "otf", "ttc")
-        val SU_PATHS = listOf("/system/bin/su", "/system/xbin/su", "/sbin/su")
+        val SU_PATHS = listOf(
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/system/bin/.ext/.su",
+            "/debug_ramdisk/su",
+            "/debug_ramdisk/bin/su",
+            "/debug_ramdisk/ksu/bin/su",
+            "/dev/ksu/bin/su",
+            "/data/adb/ksu/bin/su",
+            "/data/adb/magisk/su",
+            "/data/adb/ap/bin/su",
+        )
 
         fun quote(value: String): String = "'${value.replace("'", "'\\''")}'"
     }
